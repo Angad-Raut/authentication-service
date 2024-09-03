@@ -1,0 +1,40 @@
+version: '1.0'
+services:
+  mysql:
+    container_name: mysqlAuthDB
+    image: mysql
+    volumes:
+      - mysql-auth-data:/var/lib/mysql  # Volume configuration for MySQL data
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: authDetailsDB
+      MYSQL_ROOT_PASSWORD: angad@db
+    networks:
+      - auth-details-network
+
+  auth-service-app:
+    #container_name: k8s-mysql-demo-container
+    image: auth-details
+    restart: always
+    build: .
+    ports:
+      - 1989:1989
+    depends_on:
+      - mysql
+    environment:
+      MYSQL_HOST: mysqlAuthDB
+      MYSQL_USER: root
+      MYSQL_PASSWORD: angad@db
+      MYSQL_PORT: 3306
+    networks:
+      - auth-details-network
+
+networks:
+  auth-details-network:
+    driver: bridge
+
+volumes:
+  mysql-auth-data:
+    driver: local
+
