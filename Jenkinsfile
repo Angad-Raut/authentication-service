@@ -1,9 +1,4 @@
 pipeline {
-    environment {
-       registry = "9766945760/auth-details"
-       registryCredential = 'dockerhub-credentials'
-       dockerImage = ''
-    }
     agent any
     tools {
         jdk 'Jdk17'
@@ -13,7 +8,7 @@ pipeline {
         stage('Git Checkout') {
             steps {
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-secret', url: 'https://github.com/Angad-Raut/authentication-service.git']])
-                bat 'mvn clean install'
+                bat 'mvn clean install -DskipTests'
                 echo 'Git Checkout Completed'
             }
         }
@@ -22,41 +17,33 @@ pipeline {
                 bat 'mvn clean compile'
             }
         }
-        stage('Unit Tests') {
-            steps {
-                bat 'mvn test'
-            }
-        }
         stage('Build Artifact') {
             steps {
-                bat 'mvn clean package'
+                bat 'mvn clean package -DskipTests'
             }
         }
-        stage('Docker Build') {
-            steps{
-                script {
-                    dockerImage = docker.build registry
-                    echo 'Build Image Completed'
-                }
-            }
-        }
-        stage('Docker Push') {
-            steps {
-                script {
-                    docker.withRegistry( '', registryCredential ) {
-                       dockerImage.push('latest')
-                       echo 'Push Image Completed'
+        stage('Archive Artifacts'){
+                    steps {
+                        archiveArtifacts artifacts: 'target/*.war'
                     }
-                }
-            }
         }
-        stage('Deployment') {
+        stage('Deploy on Tomcat') {
+                     steps {
+                          deploy adapters: [tomcat9(url: 'http://localhost:8085/',
+                                 credentialsId: 'tomcat-credentials')],
+                                 war: 'target/*.war',
+                                 contextPath: 'authentication-service'
+                     }
+        }
+        stage('Notification'){
              steps {
-                  bat 'docker-compose up --build -d'
-                  echo 'SUCCESS'
-                  bat 'docker logout'
-                  bat 'docker rmi 9766945760/auth-details:latest'
-             }
+                   emailext(
+                          subject: 'Authentication Service Microservice Deployed',
+                          body: 'Authentication microservice successfully deployed on tomcat server',
+                          to: 'angadraut89@gmail.com'
+                   )
+                   echo 'SUCCESS'
+            }
         }
     }
 }

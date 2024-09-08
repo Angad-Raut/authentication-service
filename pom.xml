@@ -8,6 +8,7 @@
 		<version>3.0.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+	<packaging>war</packaging>
 	<groupId>com.projectx.authentication-service</groupId>
 	<artifactId>authentication-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
@@ -37,6 +38,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
@@ -99,6 +106,11 @@
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.11.5</version>
 			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
